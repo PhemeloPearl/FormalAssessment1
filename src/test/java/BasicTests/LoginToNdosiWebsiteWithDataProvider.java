@@ -1,7 +1,8 @@
 package BasicTests;
 
 import BasicBase.BaseTestWithWaits;
-import BasicPages.DevicePurchaseWithWaits;
+import BasicPages.LoginPage;
+import BasicPages.DevicePurchasePage;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import Utilities.ReadXSLdata;
@@ -15,95 +16,89 @@ public class LoginToNdosiWebsiteWithDataProvider extends BaseTestWithWaits {
                                     String shipping, String warranty, String discountCode)
             throws InterruptedException {
 
-        DevicePurchaseWithWaits page = new DevicePurchaseWithWaits(driver, wait);
+        LoginPage loginPage   = new LoginPage(driver, wait);
+        DevicePurchasePage devicePage = new DevicePurchasePage(driver, wait);
 
-        // STEP 1: Login
-        page.clickLoginNav();
-        page.enterEmail(email);
-        page.enterPassword(password);
-        page.clickLoginSubmit();
-        page.waitForLoginModalToClose();
-        Assert.assertTrue(page.getWelcomeHeadingText().contains(expectedWelcome),
-                "Welcome message mismatch");
+        //instruction 1
+        loginPage.clickLoginNav();
+        loginPage.enterEmail(email);
+        loginPage.enterPassword(password);
+        loginPage.clickLoginSubmit();
+        loginPage.waitForLoginModalToClose();
+        Assert.assertTrue(loginPage.getWelcomeHeadingText().contains(expectedWelcome), "Welcome message mismatch");
 
-        // STEP 2: Navigate to Web Automation Advance tab
-        page.clickMenuButton();
-        page.clickPracticeLink();
-        Assert.assertEquals(page.getPracticeHeadingText(), expectedWelcome);
-        page.clickWebTab();
-        Assert.assertTrue(page.isInventoryFormDisplayed(), "Inventory Form should be visible");
+        //instruction 2: Navigate to Web tab
+        loginPage.clickMenuButton();
+        loginPage.clickPracticeLink();
+        Assert.assertEquals(loginPage.getPracticeHeadingText(), expectedWelcome);
+        loginPage.clickWebTab();
+        Assert.assertTrue(devicePage.isInventoryFormDisplayed(),"Inventory Form should be visible");
 
-        // STEP 3: Select Device Type
-        page.selectDeviceType(deviceType);
-        Assert.assertTrue(page.isBrandDropdownEnabled(), "Brand dropdown should be enabled");
+        // instruction 3: Select Device Type
+        devicePage.selectDeviceType(deviceType);
+        Assert.assertTrue(devicePage.isBrandDropdownEnabled(),"Brand dropdown should be enabled");
 
-        // STEP 4: Select Brand
-        page.selectBrand(brand);
-        Assert.assertTrue(page.isDevicePreviewDisplayed(), "Device preview should be visible");
+        //instruction 4: Select Brand
+        devicePage.selectBrand(brand);
+        Assert.assertTrue(devicePage.isDevicePreviewDisplayed(), "Device preview should be visible");
 
-        // STEP 5: Select Storage & verify unit price
-        page.selectStorage128GB();
-        Assert.assertTrue(page.isStorage128GBSelected(), "128GB should be selected");
-        String unitPriceText = page.getUnitPriceText();
-        Assert.assertEquals(unitPriceText, "R480.00", "Unit price should be R480.00");
-        double unitPrice = Double.parseDouble(unitPriceText.replace("R", ""));
+        // instruction 5: Select Storage & verify unit price
+        devicePage.selectStorage128GB();
+        Assert.assertTrue(devicePage.isStorage128GBSelected(), "128GB should be selected");
+        String unitPriceText = devicePage.getUnitPriceText();
+        Assert.assertEquals(Double.parseDouble(unitPriceText.replace("R", "").replace(",", ".")), 480.00, "Unit price should be R480.00");
+        double unitPrice = Double.parseDouble(unitPriceText.replace("R", "").replace(",", "."));
 
-        // STEP 6: Select Color
-        page.selectColor(color);
-        Assert.assertEquals(page.getSelectedColor(), color, "Color should be " + color);
+        // instruction 6: Select Color
+        devicePage.selectColor(color);
+        Assert.assertEquals(devicePage.getSelectedColor(), color, "Color mismatch");
 
-        // STEP 7: Enter Quantity & verify subtotal
-        page.enterQuantity(quantity);
-        int qty = page.getQuantityValue();
+        // instruction 7: Enter Quantity & verify subtotal
+        devicePage.enterQuantity(quantity);
+        int qty = devicePage.getQuantityValue();
         Assert.assertEquals(qty, Integer.parseInt(quantity), "Quantity mismatch");
         double expectedSubtotal = unitPrice * qty;
-        String expectedSubtotalText = page.getSubtotalText();
-        Assert.assertEquals(
-                Double.parseDouble(expectedSubtotalText.replace("R", "").replace(",", ".")),
-                expectedSubtotal,
-                "Subtotal mismatch");
+        Assert.assertEquals(Double.parseDouble(devicePage.getSubtotalText().replace("R", "").replace(",", ".")), expectedSubtotal, "Subtotal mismatch");
 
-        // STEP 8: Enter Address
-        page.enterAddress(address);
-        Assert.assertEquals(page.getAddressValue(), address, "Address mismatch");
+        // instruction 8: Enter Address
+        devicePage.enterAddress(address);
+        Assert.assertEquals(devicePage.getAddressValue(), address, "Address mismatch");
 
-        // STEP 9: Click Next
-        page.clickNextButton();
-        Assert.assertTrue(page.isShippingOptionsDisplayed(), "Shipping options should be visible");
+        // instruction 9: Click Next
+        devicePage.clickNextButton();
+        Assert.assertTrue(devicePage.isShippingOptionsDisplayed(), "Shipping options should be visible");
 
-        // STEP 10: Select Shipping
-        page.selectShipping(shipping);
+        // instruction 10: Select Shipping
+        devicePage.selectShipping(shipping);
 
-        // STEP 11: Select Warranty
-        page.selectWarranty(warranty);
+        // instruction 11: Select Warranty
+        devicePage.selectWarranty(warranty);
 
-        // STEP 12: Apply Discount & verify final total
-        page.applyDiscountCode(discountCode);
-        double shippingCost  = 25.00;
-        double warrantyCost  = 49.00;
+        // instruction 12: Apply Discount & verify total
+        devicePage.applyDiscountCode(discountCode);
+        double shippingCost   = 25.00;
+        double warrantyCost   = 49.00;
         double beforeDiscount = expectedSubtotal + shippingCost + warrantyCost;
         double expectedFinal  = Math.round((beforeDiscount - beforeDiscount * 0.10) * 100.0) / 100.0;
-        String finalTotalText = page.getFinalTotalText();
+        String finalTotalText = devicePage.getFinalTotalText();
         Assert.assertEquals(Double.parseDouble(finalTotalText), expectedFinal, "Final total mismatch");
 
-        // STEP 13: Confirm Purchase
-        page.clickConfirmPurchase();
-        var toast = page.getSuccessToast();
-        Assert.assertTrue(page.isToastVisible(toast) || toast.getText().length() > 0,
-                "Success toast should appear");
-        Assert.assertTrue(toast.getText().contains("your order was purchased successfully!"),
-                "Toast message mismatch");
+        // instruction 13: Confirm Purchase
+        devicePage.clickConfirmPurchase();
+        var toast = devicePage.getSuccessToast();
+        Assert.assertTrue(devicePage.isToastVisible(toast) || toast.getText().length() > 0, "Success toast should appear");
+        Assert.assertTrue(toast.getText().contains("your order was purchased successfully!"), "Toast message mismatch");
 
-        // STEP 14: View Invoice History
-        page.clickViewInvoiceHistory();
-        Assert.assertTrue(page.isInvoiceCardDisplayed(), "Invoice card should be visible");
+        // instruction 14: View Invoice History
+        devicePage.clickViewInvoiceHistory();
+        Assert.assertTrue(devicePage.isInvoiceCardDisplayed(), "Invoice card should be visible");
 
-        // STEP 15: View Invoice & verify details
-        page.clickViewInvoice();
-        Assert.assertEquals(page.getInvoiceTotalText(), finalTotalText, "Invoice total mismatch");
-        Assert.assertTrue(page.getCustomerNameText().contains("Montjo Mohlake"),
-                "Customer name mismatch");
+        // instruction 15: Verify Invoice Details
+        devicePage.clickViewInvoice();
+        Assert.assertEquals(devicePage.getInvoiceTotalText(), finalTotalText, "Invoice total mismatch");
+        Assert.assertTrue(devicePage.getCustomerNameText().contains("Montjo Mohlake"), "Customer name mismatch");
 
-        System.out.println("✅ Test passed! Invoice total: R" + page.getInvoiceTotalText());
+        System.out.println("✅ Test passed! Invoice total: R" + devicePage.getInvoiceTotalText());
+
     }
 }

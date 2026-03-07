@@ -1,9 +1,10 @@
 package Utilities;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 
 public class BrowserFactory {
 
@@ -11,13 +12,11 @@ public class BrowserFactory {
         WebDriver driver;
         switch (browserName.toLowerCase()) {
             case "firefox":
-                WebDriverManager.firefoxdriver().setup();
-                driver = new FirefoxDriver();
+                driver = new FirefoxDriver(new FirefoxOptions());
                 break;
             case "chrome":
             default:
-                WebDriverManager.chromedriver().setup();
-                driver = new ChromeDriver();
+                driver = new ChromeDriver(new ChromeOptions());
                 break;
         }
         return driver;
